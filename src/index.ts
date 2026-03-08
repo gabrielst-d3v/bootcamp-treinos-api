@@ -2,7 +2,6 @@ import "dotenv/config";
 
 import fastifyCors from "@fastify/cors";
 import fastifySwagger from "@fastify/swagger";
-import fastifySwaggerUI from "@fastify/swagger-ui";
 import fastifyApiReference from "@scalar/fastify-api-reference";
 import Fastify from "fastify";
 import {
@@ -128,7 +127,7 @@ app.route({
 });
 
 try {
-  await app.listen({ port: Number(process.env.PORT) || 3333 });
+  await app.listen({ port: Number(process.env.PORT) || 3000 });
 } catch (err) {
   app.log.error(err);
   process.exit(1);
