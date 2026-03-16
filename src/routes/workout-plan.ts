@@ -3,6 +3,7 @@ import { FastifyInstance } from "fastify";
 import { ZodTypeProvider } from "fastify-type-provider-zod";
 
 import { NotFoundError } from "../errors/index.js";
+import { Prisma } from "../generated/prisma/client.js";
 import { auth } from "../lib/auth.js";
 import { ErrorSchema, WorkoutPlanSchema } from "../schemas/index.js";
 import {
@@ -20,6 +21,7 @@ export const workoutPlanRoutes = async (app: FastifyInstance) => {
         201: WorkoutPlanSchema,
         400: ErrorSchema,
         401: ErrorSchema,
+        409: ErrorSchema,
         404: ErrorSchema,
         500: ErrorSchema,
       },
@@ -44,13 +46,22 @@ export const workoutPlanRoutes = async (app: FastifyInstance) => {
           });
         return reply.status(201).send(workoutPlan);
       } catch (error) {
-        app.log.error(error);
         if (error instanceof NotFoundError) {
           return reply.status(404).send({
             error: error.message,
             code: "NOT_FOUND_ERROR",
           });
         }
+        if (
+          error instanceof Prisma.PrismaClientKnownRequestError &&
+          error.code === "P2002"
+        ) {
+          return reply.status(409).send({
+            error: "An active workout plan already exists for this user",
+            code: "CONFLICT",
+          });
+        }
+        app.log.error(error);
         return reply.status(500).send({
           error: "Internal server error",
           code: "INTERNAL_SERVER_ERROR",
